@@ -32,7 +32,7 @@
     border-radius: 12px;
     padding: 20px;
     
-    /* CHANGED: Set to exact 492px as requested */
+    /* Set to exact 492px */
     max-width: 492px; 
     
     margin: 0 auto;
@@ -211,7 +211,7 @@
     .client-input { display: none !important; }
 
     /* 3. Center the Title */
-    .header-row { justify-content: center; } /* Centers h2 since input is gone */
+    .header-row { justify-content: center; } 
 
     /* Footer Stack */
     .footer-row {
@@ -304,12 +304,12 @@
 
   <h3>4. Usage & Files</h3>
 
-<label class="checkbox-item">
-    <input type="checkbox" id="check-personal" onchange="handleUsage('personal')" checked>
-    <div class="checkbox-row">
+  <label class="checkbox-item">
+    <input type="checkbox" checked disabled>
+    <div class="checkbox-row disabled-row">
       <span class="checkbox-box"></span>
       <span class="item-name">Personal Use</span>
-      <span class="item-price"></span>
+      <span class="item-price">Included</span>
     </div>
   </label>
 
@@ -381,6 +381,13 @@
 </div>
 
 <script>
+  // --- HELPER TO SAFELY GET CHECKED STATE ---
+  // This prevents the calculator from crashing if you delete/replace a button
+  function getChecked(id) {
+    let el = document.getElementById(id);
+    return el ? el.checked : false;
+  }
+
   function calculate() {
     let base = 0;
     document.getElementsByName('base').forEach(radio => {
@@ -388,14 +395,19 @@
     });
 
     let slider = document.getElementById('complexity');
-    let complexityPercent = parseInt(slider.value);
-    document.getElementById('complexity-disp').innerText = complexityPercent;
-    let complexityFee = base * (complexityPercent / 100);
+    // Safe check in case slider is missing
+    let complexityPercent = slider ? parseInt(slider.value) : 0;
+    
+    if(document.getElementById('complexity-disp')) {
+        document.getElementById('complexity-disp').innerText = complexityPercent;
+    }
 
+    let complexityFee = base * (complexityPercent / 100);
     let artSubtotal = base + complexityFee;
 
     let sepFee = 0;
-    if(document.getElementById('check-separation').checked) {
+    // Use Safe Checker
+    if(getChecked('check-separation')) {
       sepFee = artSubtotal * 1.0;
     }
 
@@ -403,21 +415,24 @@
 
     let usagePercent = 0;
 
-    let isCommercial = document.getElementById('check-commercial').checked;
-    let isStream = document.getElementById('check-stream').checked;
+    // Use Safe Checkers
+    let isCommercial = getChecked('check-commercial');
+    let isStream = getChecked('check-stream');
+    let isSpine = getChecked('check-spine');
+    let isDelay = getChecked('check-private-delay');
+    let isPerm = getChecked('check-private-perm');
 
     if(isStream && !isCommercial) usagePercent += 0.50;
     if(isCommercial) usagePercent += 2.00;
-    if(document.getElementById('check-spine').checked) usagePercent += 3.00;
-    if(document.getElementById('check-private-delay').checked) usagePercent += 0.20;
-    if(document.getElementById('check-private-perm').checked) usagePercent += 0.50;
-	if(document.getElementById('check-personal').checked) usagePercent += 0.00;
+    if(isSpine) usagePercent += 3.00;
+    if(isDelay) usagePercent += 0.20;
+    if(isPerm) usagePercent += 0.50;
 
     let usageFeeAmount = projectSubtotal * usagePercent;
-
     let total = projectSubtotal + usageFeeAmount;
 
-    document.getElementById('final-price').innerText = Math.round(total);
+    let finalPriceEl = document.getElementById('final-price');
+    if(finalPriceEl) finalPriceEl.innerText = Math.round(total);
   }
 
   // --- HANDLERS ---
@@ -427,16 +442,17 @@
     let delayRow = document.getElementById('row-private-delay');
     let permRow = document.getElementById('row-private-perm');
 
-    delayRow.classList.remove('disabled-row');
-    permRow.classList.remove('disabled-row');
+    // Safe checks
+    if(delayRow) delayRow.classList.remove('disabled-row');
+    if(permRow) permRow.classList.remove('disabled-row');
 
-    if (type === 'delay' && delayCb.checked) {
-        permCb.checked = false; 
-        permRow.classList.add('disabled-row'); 
+    if (type === 'delay' && delayCb && delayCb.checked) {
+        if(permCb) permCb.checked = false; 
+        if(permRow) permRow.classList.add('disabled-row'); 
     } 
-    else if (type === 'perm' && permCb.checked) {
-        delayCb.checked = false; 
-        delayRow.classList.add('disabled-row'); 
+    else if (type === 'perm' && permCb && permCb.checked) {
+        if(delayCb) delayCb.checked = false; 
+        if(delayRow) delayRow.classList.add('disabled-row'); 
     }
     calculate();
   }
@@ -447,14 +463,17 @@
     let stream = document.getElementById('check-stream');
     let streamRow = document.getElementById('row-stream');
 
-    if (type === 'spine' && spine.checked) comm.checked = true; 
+    if (type === 'spine' && spine && spine.checked) {
+        if(comm) comm.checked = true; 
+    }
     
-    if (comm.checked) {
-        stream.checked = true; 
-        streamRow.classList.add('disabled-row'); 
+    // Commercial Logic
+    if (comm && comm.checked) {
+        if(stream) stream.checked = true; 
+        if(streamRow) streamRow.classList.add('disabled-row'); 
     } else {
-        streamRow.classList.remove('disabled-row');
-        if(spine.checked) spine.checked = false;
+        if(streamRow) streamRow.classList.remove('disabled-row');
+        if(spine && spine.checked) spine.checked = false;
     }
     calculate();
   }
@@ -514,8 +533,9 @@
     }).then(canvas => {
         let link = document.createElement('a');
         
-        // --- NEW FILENAME LOGIC ---
-        let clientName = document.getElementById('client-name').value.trim() || "Client";
+        // Safe Client Name
+        let nameEl = document.getElementById('client-name');
+        let clientName = (nameEl && nameEl.value.trim()) ? nameEl.value.trim() : "Client";
         
         let baseVal = 0;
         document.getElementsByName('base').forEach(radio => {
@@ -530,7 +550,8 @@
         };
         let baseName = baseMap[baseVal] || "Custom";
 
-        let compVal = parseInt(document.getElementById('complexity').value);
+        let compEl = document.getElementById('complexity');
+        let compVal = compEl ? parseInt(compEl.value) : 0;
         let compMap = {
             0: "Simple",
             25: "Medium",
@@ -550,16 +571,19 @@
   }
 
   function savePreset() {
+    let safeGet = (id) => { let el = document.getElementById(id); return el ? el.checked : false; };
+    let safeVal = (id) => { let el = document.getElementById(id); return el ? el.value : ""; };
+
     let data = {
-        name: document.getElementById('client-name').value,
+        name: safeVal('client-name'),
         base: Array.from(document.getElementsByName('base')).find(r => r.checked)?.value || 0,
-        complexity: document.getElementById('complexity').value,
-        separation: document.getElementById('check-separation').checked,
-        stream: document.getElementById('check-stream').checked,
-        commercial: document.getElementById('check-commercial').checked,
-        spine: document.getElementById('check-spine').checked,
-        delay: document.getElementById('check-private-delay').checked,
-        perm: document.getElementById('check-private-perm').checked
+        complexity: safeVal('complexity'),
+        separation: safeGet('check-separation'),
+        stream: safeGet('check-stream'),
+        commercial: safeGet('check-commercial'),
+        spine: safeGet('check-spine'),
+        delay: safeGet('check-private-delay'),
+        perm: safeGet('check-private-perm')
     };
     let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data));
     let link = document.createElement('a');
@@ -574,15 +598,18 @@
     let reader = new FileReader();
     reader.onload = function(e) {
         let data = JSON.parse(e.target.result);
-        document.getElementById('client-name').value = data.name || "";
+        if(document.getElementById('client-name')) document.getElementById('client-name').value = data.name || "";
         document.getElementsByName('base').forEach(r => { r.checked = (r.value == data.base); });
-        document.getElementById('complexity').value = data.complexity || 0;
-        document.getElementById('check-separation').checked = data.separation || false;
-        document.getElementById('check-stream').checked = data.stream || false;
-        document.getElementById('check-commercial').checked = data.commercial || false;
-        document.getElementById('check-spine').checked = data.spine || false;
-        document.getElementById('check-private-delay').checked = data.delay || false;
-        document.getElementById('check-private-perm').checked = data.perm || false;
+        if(document.getElementById('complexity')) document.getElementById('complexity').value = data.complexity || 0;
+        
+        let safeSet = (id, val) => { let el = document.getElementById(id); if(el) el.checked = val || false; };
+        
+        safeSet('check-separation', data.separation);
+        safeSet('check-stream', data.stream);
+        safeSet('check-commercial', data.commercial);
+        safeSet('check-spine', data.spine);
+        safeSet('check-private-delay', data.delay);
+        safeSet('check-private-perm', data.perm);
         
         handleUsage('restore'); 
         handlePrivate('restore'); 
