@@ -31,10 +31,7 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 20px;
-    
-    /* Set to exact 492px */
     max-width: 492px; 
-    
     margin: 0 auto;
     box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     box-sizing: border-box; 
@@ -204,16 +201,10 @@
 
   /* --- MOBILE ADJUSTMENTS (Phone Only) --- */
   @media (max-width: 600px) {
-    /* 1. Hide Tools */
     .tools-area { display: none !important; }
-
-    /* 2. Hide Name Input Box */
     .client-input { display: none !important; }
-
-    /* 3. Center the Title */
     .header-row { justify-content: center; } 
 
-    /* Footer Stack */
     .footer-row {
         flex-direction: column-reverse;
         align-items: stretch;
@@ -259,19 +250,19 @@
   <h3>1. Base Price</h3>
   <div class="base-grid">
     <label class="radio-label">
-      <input type="radio" name="base" value="20" onchange="calculate()">
+      <input type="radio" name="base" value="20" onclick="toggleBase(this)">
       <div>Chibi<br>$20</div>
     </label>
     <label class="radio-label">
-      <input type="radio" name="base" value="40" onchange="calculate()">
+      <input type="radio" name="base" value="40" onclick="toggleBase(this)">
       <div>Portrait<br>$40</div>
     </label>
     <label class="radio-label">
-      <input type="radio" name="base" value="60" onchange="calculate()">
+      <input type="radio" name="base" value="60" onclick="toggleBase(this)">
       <div>Full Body<br>$60</div>
     </label>
     <label class="radio-label">
-      <input type="radio" name="base" value="100" onchange="calculate()">
+      <input type="radio" name="base" value="100" onclick="toggleBase(this)">
       <div>Full Scene<br>$100</div>
     </label>
   </div>
@@ -294,10 +285,19 @@
   <h3>3. Add-ons</h3>
   
   <label class="checkbox-item">
-    <input type="checkbox" id="check-separation" onchange="calculate()">
-    <div class="checkbox-row">
+    <input type="checkbox" id="check-guide" onchange="handleSeparation('guide')">
+    <div class="checkbox-row" id="row-guide">
       <span class="checkbox-box"></span>
-      <span class="item-name">Layer Separation (Cut)</span>
+      <span class="item-name">Layer Segmentation Guide</span>
+      <span class="item-price">Free</span>
+    </div>
+  </label>
+  
+  <label class="checkbox-item">
+    <input type="checkbox" id="check-separation" onchange="handleSeparation('work')">
+    <div class="checkbox-row" id="row-work">
+      <span class="checkbox-box"></span>
+      <span class="item-name">Layer Separation (Work)</span>
       <span class="item-price">+100%</span>
     </div>
   </label>
@@ -359,7 +359,6 @@
   </label>
 
   <div class="footer-row">
-    
     <div class="footer-left-col">
         <a href="#" onclick="history.back(); return false;" class="tool-btn" id="btn-back">
             &laquo; Back
@@ -381,11 +380,24 @@
 </div>
 
 <script>
-  // --- HELPER TO SAFELY GET CHECKED STATE ---
-  // This prevents the calculator from crashing if you delete/replace a button
+  let currentBase = null; // Track selected base to allow deselect
+
   function getChecked(id) {
     let el = document.getElementById(id);
     return el ? el.checked : false;
+  }
+
+  // --- NEW: Toggle Base Price Logic ---
+  function toggleBase(radio) {
+    // If clicking the one currently tracked as selected, uncheck it
+    if (currentBase === radio.value) {
+        radio.checked = false;
+        currentBase = null;
+    } else {
+        // Otherwise, track this as the new selected base
+        currentBase = radio.value;
+    }
+    calculate();
   }
 
   function calculate() {
@@ -393,9 +405,12 @@
     document.getElementsByName('base').forEach(radio => {
       if(radio.checked) base = parseInt(radio.value);
     });
+    // Sync tracker with actual state (important for page loads/presets)
+    if(base === 0) currentBase = null;
+    else currentBase = base.toString();
+
 
     let slider = document.getElementById('complexity');
-    // Safe check in case slider is missing
     let complexityPercent = slider ? parseInt(slider.value) : 0;
     
     if(document.getElementById('complexity-disp')) {
@@ -406,7 +421,7 @@
     let artSubtotal = base + complexityFee;
 
     let sepFee = 0;
-    // Use Safe Checker
+    // Layer Separation (Work) Logic
     if(getChecked('check-separation')) {
       sepFee = artSubtotal * 1.0;
     }
@@ -415,7 +430,6 @@
 
     let usagePercent = 0;
 
-    // Use Safe Checkers
     let isCommercial = getChecked('check-commercial');
     let isStream = getChecked('check-stream');
     let isSpine = getChecked('check-spine');
@@ -436,13 +450,35 @@
   }
 
   // --- HANDLERS ---
+
+  // NEW: Handle Separation vs Guide
+  function handleSeparation(type) {
+    let work = document.getElementById('check-separation');
+    let guide = document.getElementById('check-guide');
+    let workRow = document.getElementById('row-work');
+    let guideRow = document.getElementById('row-guide');
+
+    // Reset Visuals
+    if(workRow) workRow.classList.remove('disabled-row');
+    if(guideRow) guideRow.classList.remove('disabled-row');
+
+    if (type === 'work' && work && work.checked) {
+        if(guide) guide.checked = false; 
+        if(guideRow) guideRow.classList.add('disabled-row'); 
+    } 
+    else if (type === 'guide' && guide && guide.checked) {
+        if(work) work.checked = false; 
+        if(workRow) workRow.classList.add('disabled-row'); 
+    }
+    calculate();
+  }
+
   function handlePrivate(type) {
     let delayCb = document.getElementById('check-private-delay');
     let permCb = document.getElementById('check-private-perm');
     let delayRow = document.getElementById('row-private-delay');
     let permRow = document.getElementById('row-private-perm');
 
-    // Safe checks
     if(delayRow) delayRow.classList.remove('disabled-row');
     if(permRow) permRow.classList.remove('disabled-row');
 
@@ -467,7 +503,6 @@
         if(comm) comm.checked = true; 
     }
     
-    // Commercial Logic
     if (comm && comm.checked) {
         if(stream) stream.checked = true; 
         if(streamRow) streamRow.classList.add('disabled-row'); 
@@ -484,13 +519,9 @@
         scale: 2,
         useCORS: true,
         onclone: function(clonedDoc) {
-            // 1. Hide Buttons
             let leftCol = clonedDoc.querySelector('.footer-left-col');
-            if(leftCol) {
-                leftCol.style.visibility = 'hidden'; 
-            }
+            if(leftCol) leftCol.style.visibility = 'hidden'; 
 
-            // 2. FORCE SLIDER RENDER
             let realSlider = clonedDoc.getElementById('complexity');
             if (realSlider) {
                 let fakeContainer = clonedDoc.createElement('div');
@@ -532,8 +563,6 @@
         }
     }).then(canvas => {
         let link = document.createElement('a');
-        
-        // Safe Client Name
         let nameEl = document.getElementById('client-name');
         let clientName = (nameEl && nameEl.value.trim()) ? nameEl.value.trim() : "Client";
         
@@ -542,23 +571,12 @@
              if(radio.checked) baseVal = parseInt(radio.value);
         });
         
-        let baseMap = {
-            20: "Chibi",
-            40: "Portrait",
-            60: "FullBody",
-            100: "FullScene"
-        };
+        let baseMap = { 20: "Chibi", 40: "Portrait", 60: "FullBody", 100: "FullScene" };
         let baseName = baseMap[baseVal] || "Custom";
 
         let compEl = document.getElementById('complexity');
         let compVal = compEl ? parseInt(compEl.value) : 0;
-        let compMap = {
-            0: "Simple",
-            25: "Medium",
-            50: "Detail",
-            75: "Complex",
-            100: "Max"
-        };
+        let compMap = { 0: "Simple", 25: "Medium", 50: "Detail", 75: "Complex", 100: "Max" };
         let compName = compMap[compVal] || compVal + "%";
 
         let filename = `Quote_${clientName}_${baseName}_${compName}.png`;
@@ -579,6 +597,7 @@
         base: Array.from(document.getElementsByName('base')).find(r => r.checked)?.value || 0,
         complexity: safeVal('complexity'),
         separation: safeGet('check-separation'),
+        guide: safeGet('check-guide'), // NEW
         stream: safeGet('check-stream'),
         commercial: safeGet('check-commercial'),
         spine: safeGet('check-spine'),
@@ -605,12 +624,14 @@
         let safeSet = (id, val) => { let el = document.getElementById(id); if(el) el.checked = val || false; };
         
         safeSet('check-separation', data.separation);
+        safeSet('check-guide', data.guide); // NEW
         safeSet('check-stream', data.stream);
         safeSet('check-commercial', data.commercial);
         safeSet('check-spine', data.spine);
         safeSet('check-private-delay', data.delay);
         safeSet('check-private-perm', data.perm);
         
+        handleSeparation('restore'); // NEW Restore
         handleUsage('restore'); 
         handlePrivate('restore'); 
         calculate();
@@ -619,7 +640,9 @@
     input.value = '';
   }
 
+  // Initialize checks
   calculate();
+  handleSeparation('restore'); 
 </script>
 
 </body>
