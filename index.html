@@ -32,7 +32,7 @@
     border-radius: 12px;
     padding: 20px;
     
-    /* CHANGED: Increased from 450px to 500px to fix compressed look */
+    /* CHANGED: Set to exact 492px as requested */
     max-width: 492px; 
     
     margin: 0 auto;
@@ -204,10 +204,16 @@
 
   /* --- MOBILE ADJUSTMENTS (Phone Only) --- */
   @media (max-width: 600px) {
-    .tools-area { 
-        display: none !important; 
-    }
+    /* 1. Hide Tools */
+    .tools-area { display: none !important; }
 
+    /* 2. Hide Name Input Box */
+    .client-input { display: none !important; }
+
+    /* 3. Center the Title */
+    .header-row { justify-content: center; } /* Centers h2 since input is gone */
+
+    /* Footer Stack */
     .footer-row {
         flex-direction: column-reverse;
         align-items: stretch;
@@ -235,7 +241,6 @@
     
     .calculator-card {
         padding: 15px;
-        /* Ensure it uses full available width on phone */
         max-width: 100%; 
     }
   }
