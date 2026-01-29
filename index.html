@@ -305,13 +305,13 @@
   <div class="footer-row">
     
     <div class="footer-left-col">
-        <a href="https://2dtuna.carrd.co/#tos" class="tool-btn">
+        <a href="#" onclick="history.back(); return false;" class="tool-btn" id="btn-back">
             &laquo; Back
         </a>
         <div class="tools-area">
-            <button class="tool-btn" onclick="saveScreenshot()">📷 Screenshot</button>
-            <button class="tool-btn" onclick="savePreset()">💾 Save</button>
-            <button class="tool-btn" onclick="document.getElementById('file-upload').click()">📂 Load</button>
+            <button class="tool-btn" id="btn-shot" onclick="saveScreenshot()">📷 Screenshot</button>
+            <button class="tool-btn" id="btn-save" onclick="savePreset()">💾 Save</button>
+            <button class="tool-btn" id="btn-load" onclick="document.getElementById('file-upload').click()">📂 Load</button>
             <input type="file" id="file-upload" accept=".json" onchange="loadPreset(this)">
         </div>
     </div>
@@ -458,16 +458,13 @@
         let link = document.createElement('a');
         
         // --- NEW FILENAME LOGIC ---
-        // 1. Client Name (Default to "Client" if empty)
         let clientName = document.getElementById('client-name').value.trim() || "Client";
         
-        // 2. Base Price Name
         let baseVal = 0;
         document.getElementsByName('base').forEach(radio => {
              if(radio.checked) baseVal = parseInt(radio.value);
         });
         
-        // Map values to Names
         let baseMap = {
             20: "Chibi",
             40: "Portrait",
@@ -476,7 +473,6 @@
         };
         let baseName = baseMap[baseVal] || "Custom";
 
-        // 3. Complexity Name
         let compVal = parseInt(document.getElementById('complexity').value);
         let compMap = {
             0: "Simple",
@@ -487,10 +483,7 @@
         };
         let compName = compMap[compVal] || compVal + "%";
 
-        // Create Filename: Quote_Name_Base_Complexity.png
         let filename = `Quote_${clientName}_${baseName}_${compName}.png`;
-        
-        // Sanitize (remove spaces to be safe)
         filename = filename.replace(/ /g, "");
 
         link.download = filename;
