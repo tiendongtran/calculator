@@ -304,6 +304,15 @@
 
   <h3>4. Usage & Files</h3>
 
+<label class="checkbox-item">
+    <input type="checkbox" id="check-personal" onchange="handleUsage('personal')" checked>
+    <div class="checkbox-row">
+      <span class="checkbox-box"></span>
+      <span class="item-name">Personal Use</span>
+      <span class="item-price"></span>
+    </div>
+  </label>
+
   <label class="checkbox-item">
     <input type="checkbox" id="check-stream" onchange="handleUsage('stream')">
     <div class="checkbox-row" id="row-stream">
@@ -402,6 +411,7 @@
     if(document.getElementById('check-spine').checked) usagePercent += 3.00;
     if(document.getElementById('check-private-delay').checked) usagePercent += 0.20;
     if(document.getElementById('check-private-perm').checked) usagePercent += 0.50;
+	if(document.getElementById('check-personal').checked) usagePercent += 0.00;
 
     let usageFeeAmount = projectSubtotal * usagePercent;
 
