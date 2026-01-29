@@ -66,7 +66,7 @@
   .base-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px; /* Reverted to 8px */
+    gap: 8px;
   }
 
   .radio-label {
@@ -77,11 +77,11 @@
     text-align: center;
     cursor: pointer;
     transition: 0.2s;
-    font-size: 0.9rem; /* Reverted to 0.9rem */
+    font-size: 0.9rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 50px; /* Reverted to 50px */
+    min-height: 50px;
   }
 
   .radio-label:hover { border-color: var(--text-muted); background-color: var(--btn-hover); }
@@ -107,8 +107,8 @@
   }
 
   /* --- SLIDER --- */
-  .slider-container { margin: 15px 0; /* Reverted to 15px */ }
-  .slider-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; } /* Reverted font size */
+  .slider-container { margin: 15px 0; }
+  .slider-labels { display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-muted); margin-top: 5px; }
   
   input[type=range] {
     width: 100%;
@@ -121,7 +121,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px 5px; /* Reverted to 8px 5px */
+    padding: 8px 5px;
     border-bottom: 1px solid #333;
     cursor: pointer;
     transition: 0.2s;
@@ -130,10 +130,10 @@
   .checkbox-item:last-child { border-bottom: none; }
   
   .checkbox-box {
-    width: 20px; height: 20px; /* Reverted to 16px */
+    width: 20px; height: 20px;
     border: 2px solid var(--text-muted);
     border-radius: 3px;
-    margin-right: 10px; /* Reverted to 10px */
+    margin-right: 10px;
     position: relative;
     display: inline-block;
     background-color: transparent; 
@@ -154,36 +154,47 @@
   .disabled-row { opacity: 0.4; pointer-events: none; }
 
   .checkbox-row { display: flex; align-items: center; width: 100%; transition: 0.2s; }
-  .item-name { flex-grow: 1; font-size: 0.9rem; /* Reverted to 0.9rem */ }
-  .item-price { color: var(--accent); font-size: 0.8rem; font-weight: bold; /* Reverted to 0.8rem */ }
+  .item-name { flex-grow: 1; font-size: 0.9rem; }
+  .item-price { color: var(--accent); font-size: 0.8rem; font-weight: bold; }
 
   /* --- FOOTER / TOTAL --- */
   .footer-row {
-    margin-top: 25px; /* Reverted to 25px */
-    padding-top: 15px; /* Reverted to 15px */
+    margin-top: 25px;
+    padding-top: 15px;
     border-top: 2px dashed var(--border);
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
   }
   
+  /* Left Column for Back Button + Tools */
+  .footer-left-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
   .tools-area { display: flex; gap: 8px; }
 
   .tool-btn {
     background: var(--card-bg);
     border: 1px solid var(--border);
     color: var(--text-muted);
-    font-size: 0.75rem; /* Reverted to 0.75rem */
-    padding: 6px 10px; /* Reverted to 6px 10px */
+    font-size: 0.75rem;
+    padding: 6px 10px;
     border-radius: 4px;
     cursor: pointer;
     transition: 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    line-height: normal;
   }
   .tool-btn:hover { color: var(--text); border-color: var(--accent); background: var(--bg-color); }
 
   .total-area { text-align: right; }
-  .total-label { font-size: 0.8rem; color: var(--text-muted); /* Reverted font size */ }
-  .total-price { font-size: 1.8rem; font-weight: bold; color: var(--accent); /* Reverted to 1.8rem */ }
+  .total-label { font-size: 0.8rem; color: var(--text-muted); }
+  .total-price { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
 
   #file-upload { display: none; }
 
@@ -292,12 +303,19 @@
   </label>
 
   <div class="footer-row">
-    <div class="tools-area">
-        <button class="tool-btn" onclick="saveScreenshot()">📷 Screenshot</button>
-        <button class="tool-btn" onclick="savePreset()">💾 Save</button>
-        <button class="tool-btn" onclick="document.getElementById('file-upload').click()">📂 Load</button>
-        <input type="file" id="file-upload" accept=".json" onchange="loadPreset(this)">
+    
+    <div class="footer-left-col">
+        <a href="https://2dtuna.carrd.co/#tos" class="tool-btn">
+            &laquo; Back
+        </a>
+        <div class="tools-area">
+            <button class="tool-btn" onclick="saveScreenshot()">📷 Screenshot</button>
+            <button class="tool-btn" onclick="savePreset()">💾 Save</button>
+            <button class="tool-btn" onclick="document.getElementById('file-upload').click()">📂 Load</button>
+            <input type="file" id="file-upload" accept=".json" onchange="loadPreset(this)">
+        </div>
     </div>
+
     <div class="total-area">
       <div class="total-label">Estimated Total</div>
       <div class="total-price">$<span id="final-price">0</span></div>
@@ -308,31 +326,25 @@
 
 <script>
   function calculate() {
-    // 1. Get Base Price
     let base = 0;
     document.getElementsByName('base').forEach(radio => {
       if(radio.checked) base = parseInt(radio.value);
     });
 
-    // 2. Complexity (Applies on Base)
     let slider = document.getElementById('complexity');
     let complexityPercent = parseInt(slider.value);
     document.getElementById('complexity-disp').innerText = complexityPercent;
     let complexityFee = base * (complexityPercent / 100);
 
-    // Art Subtotal
     let artSubtotal = base + complexityFee;
 
-    // 3. Layer Separation (+100% of Art Subtotal)
     let sepFee = 0;
     if(document.getElementById('check-separation').checked) {
       sepFee = artSubtotal * 1.0;
     }
 
-    // Project Subtotal
     let projectSubtotal = artSubtotal + sepFee;
 
-    // 4. Usage Fees
     let usagePercent = 0;
 
     let isCommercial = document.getElementById('check-commercial').checked;
@@ -346,7 +358,6 @@
 
     let usageFeeAmount = projectSubtotal * usagePercent;
 
-    // 5. Total
     let total = projectSubtotal + usageFeeAmount;
 
     document.getElementById('final-price').innerText = Math.round(total);
@@ -359,7 +370,6 @@
     let delayRow = document.getElementById('row-private-delay');
     let permRow = document.getElementById('row-private-perm');
 
-    // Reset visual
     delayRow.classList.remove('disabled-row');
     permRow.classList.remove('disabled-row');
 
@@ -396,11 +406,93 @@
     html2canvas(document.querySelector("#capture-area"), {
         backgroundColor: null,
         scale: 2,
-        useCORS: true
+        useCORS: true,
+        onclone: function(clonedDoc) {
+            // 1. Hide Buttons
+            let leftCol = clonedDoc.querySelector('.footer-left-col');
+            if(leftCol) {
+                leftCol.style.visibility = 'hidden'; 
+            }
+
+            // 2. FORCE SLIDER RENDER
+            let realSlider = clonedDoc.getElementById('complexity');
+            if (realSlider) {
+                let fakeContainer = clonedDoc.createElement('div');
+                fakeContainer.style.position = 'relative';
+                fakeContainer.style.height = '20px';
+                fakeContainer.style.display = 'flex';
+                fakeContainer.style.alignItems = 'center';
+                fakeContainer.style.margin = '15px 0'; 
+
+                let track = clonedDoc.createElement('div');
+                track.style.width = '100%';
+                track.style.height = '6px';
+                track.style.backgroundColor = '#3f3f4e'; 
+                track.style.borderRadius = '3px';
+                track.style.position = 'absolute';
+                track.style.top = '50%';
+                track.style.transform = 'translateY(-50%)';
+
+                let thumb = clonedDoc.createElement('div');
+                let val = parseInt(realSlider.value);
+                let max = parseInt(realSlider.max);
+                let percent = val / max;
+                
+                thumb.style.width = '16px';
+                thumb.style.height = '16px';
+                thumb.style.backgroundColor = '#8ab4f8'; 
+                thumb.style.borderRadius = '50%';
+                thumb.style.position = 'absolute';
+                thumb.style.top = '50%';
+                thumb.style.transform = 'translateY(-50%)';
+                thumb.style.left = `calc(${percent * 100}% - 8px)`;
+
+                fakeContainer.appendChild(track);
+                fakeContainer.appendChild(thumb);
+
+                realSlider.parentNode.insertBefore(fakeContainer, realSlider);
+                realSlider.style.display = 'none';
+            }
+        }
     }).then(canvas => {
         let link = document.createElement('a');
-        let clientName = document.getElementById('client-name').value;
-        let filename = clientName ? `Quote_${clientName}.png` : 'Commission_Quote.png';
+        
+        // --- NEW FILENAME LOGIC ---
+        // 1. Client Name (Default to "Client" if empty)
+        let clientName = document.getElementById('client-name').value.trim() || "Client";
+        
+        // 2. Base Price Name
+        let baseVal = 0;
+        document.getElementsByName('base').forEach(radio => {
+             if(radio.checked) baseVal = parseInt(radio.value);
+        });
+        
+        // Map values to Names
+        let baseMap = {
+            20: "Chibi",
+            40: "Portrait",
+            60: "FullBody",
+            100: "FullScene"
+        };
+        let baseName = baseMap[baseVal] || "Custom";
+
+        // 3. Complexity Name
+        let compVal = parseInt(document.getElementById('complexity').value);
+        let compMap = {
+            0: "Simple",
+            25: "Medium",
+            50: "Detail",
+            75: "Complex",
+            100: "Max"
+        };
+        let compName = compMap[compVal] || compVal + "%";
+
+        // Create Filename: Quote_Name_Base_Complexity.png
+        let filename = `Quote_${clientName}_${baseName}_${compName}.png`;
+        
+        // Sanitize (remove spaces to be safe)
+        filename = filename.replace(/ /g, "");
+
         link.download = filename;
         link.href = canvas.toDataURL('image/png');
         link.click();
@@ -454,5 +546,4 @@
 </script>
 
 </body>
-
 </html>
