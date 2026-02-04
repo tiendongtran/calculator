@@ -176,7 +176,11 @@
     gap: 10px;
   }
 
-  .tools-area { display: flex; gap: 8px; }
+  .tools-area { 
+      display: flex; 
+      gap: 8px; 
+      align-items: center; /* Aligns buttons and saved text vertically */
+  }
 
   .tool-btn {
     background: var(--card-bg);
@@ -193,6 +197,37 @@
   }
   .tool-btn:hover { color: var(--text); border-color: var(--accent); background: var(--bg-color); }
 
+  /* Styles for the wrapper to position the 'Saved!' text correctly */
+  .shot-wrapper {
+      position: relative;
+      display: inline-block;
+  }
+
+  /* The 'Saved!' popup style */
+  .saved-notify {
+      position: absolute;
+      left: 105%; /* Right side of the button */
+      top: 50%;
+      transform: translateY(-50%); /* Start centered vertically */
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: bold;
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 10;
+  }
+
+  /* The Animation Keyframes */
+  @keyframes floatUp {
+      0% { opacity: 1; transform: translate(0, -50%); } /* Start visible at center */
+      100% { opacity: 0; transform: translate(0, -25px); } /* Float up and fade */
+  }
+
+  .anim-float {
+      animation: floatUp 1.5s ease-out forwards;
+  }
+
   .total-area { text-align: right; }
   .total-label { font-size: 0.8rem; color: var(--text-muted); }
   .total-price { font-size: 1.8rem; font-weight: bold; color: var(--accent); }
@@ -201,10 +236,15 @@
 
   /* --- MOBILE ADJUSTMENTS (Phone Only) --- */
   @media (max-width: 600px) {
-    .tools-area { display: none !important; }
+    /* 1. RESTORED TOOLS: Removed display:none here */
+    
+    /* 2. Hide Name Input Box */
     .client-input { display: none !important; }
+
+    /* 3. Center the Title */
     .header-row { justify-content: center; } 
 
+    /* Footer Stack */
     .footer-row {
         flex-direction: column-reverse;
         align-items: stretch;
@@ -219,6 +259,12 @@
     .footer-left-col {
         align-items: stretch;
         width: 100%;
+    }
+
+    /* Ensure buttons wrap if screen is very tiny */
+    .tools-area {
+        justify-content: center;
+        flex-wrap: wrap; 
     }
 
     #btn-back {
@@ -285,20 +331,20 @@
   <h3>3. Add-ons</h3>
   
   <label class="checkbox-item">
-    <input type="checkbox" id="check-guide" onchange="handleSeparation('guide')">
-    <div class="checkbox-row" id="row-guide">
-      <span class="checkbox-box"></span>
-      <span class="item-name">Layer Segmentation Guide</span>
-      <span class="item-price">Free</span>
-    </div>
-  </label>
-  
-  <label class="checkbox-item">
     <input type="checkbox" id="check-separation" onchange="handleSeparation('work')">
     <div class="checkbox-row" id="row-work">
       <span class="checkbox-box"></span>
       <span class="item-name">Layer Separation (Work)</span>
       <span class="item-price">+100%</span>
+    </div>
+  </label>
+
+  <label class="checkbox-item">
+    <input type="checkbox" id="check-guide" onchange="handleSeparation('guide')">
+    <div class="checkbox-row" id="row-guide">
+      <span class="checkbox-box"></span>
+      <span class="item-name">Layer Segmentation Guide</span>
+      <span class="item-price">Free</span>
     </div>
   </label>
 
@@ -364,7 +410,11 @@
             &laquo; Back
         </a>
         <div class="tools-area">
-            <button class="tool-btn" id="btn-shot" onclick="saveScreenshot()">📷 Screenshot</button>
+            <div class="shot-wrapper">
+                <button class="tool-btn" id="btn-shot" onclick="saveScreenshot()">📷 Screenshot</button>
+                <span id="save-msg" class="saved-notify">Saved!</span>
+            </div>
+            
             <button class="tool-btn" id="btn-save" onclick="savePreset()">💾 Save</button>
             <button class="tool-btn" id="btn-load" onclick="document.getElementById('file-upload').click()">📂 Load</button>
             <input type="file" id="file-upload" accept=".json" onchange="loadPreset(this)">
@@ -380,21 +430,18 @@
 </div>
 
 <script>
-  let currentBase = null; // Track selected base to allow deselect
+  let currentBase = null;
 
   function getChecked(id) {
     let el = document.getElementById(id);
     return el ? el.checked : false;
   }
 
-  // --- NEW: Toggle Base Price Logic ---
   function toggleBase(radio) {
-    // If clicking the one currently tracked as selected, uncheck it
     if (currentBase === radio.value) {
         radio.checked = false;
         currentBase = null;
     } else {
-        // Otherwise, track this as the new selected base
         currentBase = radio.value;
     }
     calculate();
@@ -405,10 +452,8 @@
     document.getElementsByName('base').forEach(radio => {
       if(radio.checked) base = parseInt(radio.value);
     });
-    // Sync tracker with actual state (important for page loads/presets)
     if(base === 0) currentBase = null;
     else currentBase = base.toString();
-
 
     let slider = document.getElementById('complexity');
     let complexityPercent = slider ? parseInt(slider.value) : 0;
@@ -421,7 +466,6 @@
     let artSubtotal = base + complexityFee;
 
     let sepFee = 0;
-    // Layer Separation (Work) Logic
     if(getChecked('check-separation')) {
       sepFee = artSubtotal * 1.0;
     }
@@ -450,15 +494,12 @@
   }
 
   // --- HANDLERS ---
-
-  // NEW: Handle Separation vs Guide
   function handleSeparation(type) {
     let work = document.getElementById('check-separation');
     let guide = document.getElementById('check-guide');
     let workRow = document.getElementById('row-work');
     let guideRow = document.getElementById('row-guide');
 
-    // Reset Visuals
     if(workRow) workRow.classList.remove('disabled-row');
     if(guideRow) guideRow.classList.remove('disabled-row');
 
@@ -579,12 +620,25 @@
         let compMap = { 0: "Simple", 25: "Medium", 50: "Detail", 75: "Complex", 100: "Max" };
         let compName = compMap[compVal] || compVal + "%";
 
-        let filename = `Quote_${clientName}_${baseName}_${compName}.png`;
+        // --- NEW: Mobile Check for Filename ---
+        let suffix = "";
+        if (window.innerWidth <= 600) {
+            suffix = "_phone";
+        }
+
+        let filename = `Quote_${clientName}_${baseName}_${compName}${suffix}.png`;
         filename = filename.replace(/ /g, "");
 
         link.download = filename;
         link.href = canvas.toDataURL('image/png');
         link.click();
+
+        // --- NEW: Trigger Animation ---
+        let msg = document.getElementById('save-msg');
+        // Reset animation to allow re-triggering
+        msg.classList.remove('anim-float');
+        void msg.offsetWidth; // Force reflow (magic reset)
+        msg.classList.add('anim-float');
     });
   }
 
@@ -597,7 +651,7 @@
         base: Array.from(document.getElementsByName('base')).find(r => r.checked)?.value || 0,
         complexity: safeVal('complexity'),
         separation: safeGet('check-separation'),
-        guide: safeGet('check-guide'), // NEW
+        guide: safeGet('check-guide'),
         stream: safeGet('check-stream'),
         commercial: safeGet('check-commercial'),
         spine: safeGet('check-spine'),
@@ -624,14 +678,14 @@
         let safeSet = (id, val) => { let el = document.getElementById(id); if(el) el.checked = val || false; };
         
         safeSet('check-separation', data.separation);
-        safeSet('check-guide', data.guide); // NEW
+        safeSet('check-guide', data.guide);
         safeSet('check-stream', data.stream);
         safeSet('check-commercial', data.commercial);
         safeSet('check-spine', data.spine);
         safeSet('check-private-delay', data.delay);
         safeSet('check-private-perm', data.perm);
         
-        handleSeparation('restore'); // NEW Restore
+        handleSeparation('restore'); 
         handleUsage('restore'); 
         handlePrivate('restore'); 
         calculate();
@@ -640,7 +694,6 @@
     input.value = '';
   }
 
-  // Initialize checks
   calculate();
   handleSeparation('restore'); 
 </script>
